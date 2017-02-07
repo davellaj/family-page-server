@@ -19,6 +19,12 @@ const jsonParser = bodyParser.json();
 
 app.use(jsonParser);
 
+app.all('/*', function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "X-Requested-With");
+  next();
+});
+
 mongoose.Promise = global.Promise;
 
 app.get('/', (req, res) => {
