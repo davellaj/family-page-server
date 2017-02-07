@@ -11,7 +11,6 @@ const bodyParser = require('body-parser');
 const { DATABASE_URL, PORT } = require('./config')
 
 const HOST = process.env.HOST;
-const PORT = 8080;
 
 console.log(`Server running in ${process.env.NODE_ENV} mode` );
 
