@@ -1,8 +1,14 @@
-import 'babel-polyfill';
-import express from 'express';
-import mongoose from 'mongoose';
-import bodyParser from 'body-parser';
-import { DATABASE_URL, PORT } './config'
+// import 'babel-polyfill';
+// import express from 'express';
+// import mongoose from 'mongoose';
+// import bodyParser from 'body-parser';
+// import { DATABASE_URL, PORT } './config'
+
+
+const express = require('express');
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
+const { DATABASE_URL, PORT } = require('./config')
 
 const HOST = process.env.HOST;
 
@@ -10,10 +16,6 @@ console.log(`Server running in ${process.env.NODE_ENV} mode` );
 
 const app = express();
 const jsonParser = bodyParser.json();
-
-if (process.env.CLIENT_PATH) {
-  app.use(express.static(process.env.CLIENT_PATH));
-}
 
 app.use(jsonParser);
 
@@ -62,4 +64,4 @@ if (require.main === module) {
   runServer();
 }
 
-export { app, runServer, closeServer };
+module.exports = app;
