@@ -18,7 +18,7 @@ app.use(jsonParser);
 
 app.all('/*', function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+  res.header("Access-Control-Allow-Headers", "X-Requested-With");
   next();
 });
 
@@ -79,8 +79,12 @@ passport.use(new BearerStrategy(
 ));
 
 // get users homepage with authenticated route
-app.get('/', passport.authenticate('bearer', { session: false }),
-  (req, res) => {
+// app.get('/', passport.authenticate('bearer', { session: false }),
+//   (req, res) => {
+//     res.status(200).json({message: 'Hello from the server this route was protected'})
+// })
+
+app.get('/', (req, res) => {
     res.status(200).json({message: 'Hello from the server this route was protected'})
 })
 
