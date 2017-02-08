@@ -7,6 +7,8 @@ const passport = require('passport');
 const BearerStrategy = require('passport-http-bearer');
 const User = require('./models/user');
 
+const Photos = require('./models/photos');
+
 const HOST = process.env.HOST;
 
 console.log(`Server running in ${process.env.NODE_ENV} mode`);
@@ -86,6 +88,22 @@ passport.use(new BearerStrategy(
 
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'Hello from the server.' });
+});
+
+app.get('/photos', (req, res) => {
+  Photos.find()
+  .then((photos) => {
+    res.status(200).json(photos);
+  });
+});
+
+app.post('/photos', (req, res) => {
+  console.log(req.body);
+
+  Photos.create(req.body)
+  .then(({ _id }) => {
+    res.status(201).json({ _id });
+  });
 });
 
 let server;
