@@ -10,7 +10,7 @@
 - `GET`
   - array of photos in current family
 - `POST`
-  - message body containing one photo object in the form:
+  - message body containing one photo object
 
 ### Photo Sample Object
 ```js
@@ -23,5 +23,23 @@
     "Alex"
   ],
   "date": "2017-02-08T22:32:07.298Z"
+}
+```
+
+#### `/members`
+- `GET`
+  - array of family member objects, including currently logged in member
+- `POST`
+  - message body containing new family member info
+
+### People Sample Object
+```js
+{
+  "_id": "589bad649d2632109af8bbe7",
+  "email": "bfletch@gmail.com",
+  "fullname": "Ben Fletcher",
+  "nickname": "Ben",
+  "avatar": "https://avatars3.githubusercontent.com/u/14811503",
+  "__v": 0
 }
 ```
