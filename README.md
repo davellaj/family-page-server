@@ -17,6 +17,7 @@
 {
   "_id": "589b9c6705ae9f0d9cbd165d",
   "url": "http://lorempixel.com/900/400/nightlife",
+  "caption": "Grandma playing beach volleyball",
   "userId": "Alex",
   "tags": [
     "Ben",
