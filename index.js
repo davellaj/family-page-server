@@ -5,9 +5,10 @@ const { DATABASE_URL, PORT, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = require('
 const GoogleStrategy = require('passport-google-oauth20');
 const passport = require('passport');
 const BearerStrategy = require('passport-http-bearer');
-const User = require('./models/user');
 
+const User = require('./models/user');
 const Photos = require('./models/photos');
+const Members = require('./models/members');
 
 const HOST = process.env.HOST;
 
@@ -90,6 +91,8 @@ app.get('/', (req, res) => {
   res.status(200).json({ message: 'Hello from the server.' });
 });
 
+// ===== PHOTOS =====
+
 app.get('/photos', (req, res) => {
   Photos.find()
   .then((photos) => {
@@ -97,14 +100,29 @@ app.get('/photos', (req, res) => {
   });
 });
 
-app.post('/photos', (req, res) => {
-  console.log(req.body);
+app.post('/photos', ({ body }, res) => {
+  console.log(body);
 
-  Photos.create(req.body)
+  Photos.create(body)
   .then(({ _id }) => {
     res.status(201).json({ _id });
   });
 });
+
+// ===== MEMBERS =====
+
+app.get('/members', (req, res) => {
+  Members.find()
+  .then(members =>
+    res.status(200).json(members));
+});
+
+app.post('/members', ({ body }, res) => {
+  Members.create(body)
+  .then(data => res.status(200).json(data));
+});
+
+// ===== SERVER =====
 
 let server;
 
