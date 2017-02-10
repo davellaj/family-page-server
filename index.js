@@ -147,21 +147,21 @@ function runServer(callback) {
   });
 }
 
-// function closeServer() {
-//   return new Promise((resolve, reject) => {
-//     console.log('Closing server');
-//     server.close(err => {
-//       if (err) {
-//         reject(err);
-//         return;
-//       }
-//       resolve();
-//     });
-//   });
-// }
+function closeServer() {
+  return new Promise((resolve, reject) => {
+    console.log('Closing server');
+    server.close((err) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve();
+    });
+  });
+}
 
 if (require.main === module) {
   runServer();
 }
 
-module.exports = app;
+module.exports = { app, runServer, closeServer };
