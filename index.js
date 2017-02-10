@@ -110,7 +110,6 @@ app.post('/photos', ({ body }, res) => {
 });
 
 app.delete('/photos/:photoId/:user', (req, res) => {
-  console.log(req.params);
   Photos.findOne(
       { _id: req.params.photoId },
       (error) => {
@@ -120,12 +119,17 @@ app.delete('/photos/:photoId/:user', (req, res) => {
         }
       })
       .then((photoToDelete) => {
+        if (!photoToDelete) {
+          res.sendStatus(404);
+          return;
+        }
         if (req.params.user === photoToDelete.userId) {
           photoToDelete.remove();
           res.sendStatus(200);
         }
         res.sendStatus(403);
-      });
+      })
+      .catch(console.error);
 });
 
 // ===== MEMBERS =====
