@@ -109,6 +109,29 @@ app.post('/photos', ({ body }, res) => {
   });
 });
 
+app.delete('/photos/:photoId/:user', (req, res) => {
+  Photos.findOne(
+      { _id: req.params.photoId },
+      (error) => {
+        if (error) {
+          console.error(error);
+          res.sendStatus(404);
+        }
+      })
+      .then((photoToDelete) => {
+        if (!photoToDelete) {
+          res.sendStatus(404);
+          return;
+        }
+        if (req.params.user === photoToDelete.userId) {
+          photoToDelete.remove();
+          res.sendStatus(200);
+        }
+        res.sendStatus(403);
+      })
+      .catch(console.error);
+});
+
 // ===== MEMBERS =====
 
 app.get('/members', (req, res) => {
