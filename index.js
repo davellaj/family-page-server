@@ -28,58 +28,58 @@ app.all('/*', (req, res, next) => {
 mongoose.Promise = global.Promise;
 
 // google auth
-passport.use(new GoogleStrategy(
-  {
-    clientID: GOOGLE_CLIENT_ID,
-    clientSecret: GOOGLE_CLIENT_SECRET,
-    callbackURL: '/auth/google/callback'
-  },
-  (accessToken, refreshToken, profile, cb) => {
-    console.log('this is the profile photo', profile.photos[0].value);
-    User.findOneAndUpdate({ googleId: profile.id }, {
-      $set: {
-        googleId: profile.id,
-        name: profile.name,
-        userName: profile.displayName,
-        email: profile.emails[0].value,
-        picture: profile.photos[0].value,
-        accessToken
-      }
-    },
-    { upsert: true, new: true, setDefaultsOnInsert: true })
-    .then((user) => {
-      console.log(user);
-      cb(null, user);
-    })
-    .catch((err) => {
-      console.log('catch error', err);
-    });
-  })
-);
+// passport.use(new GoogleStrategy(
+//   {
+//     clientID: GOOGLE_CLIENT_ID,
+//     clientSecret: GOOGLE_CLIENT_SECRET,
+//     callbackURL: '/auth/google/callback'
+//   },
+//   (accessToken, refreshToken, profile, cb) => {
+//     console.log('this is the profile photo', profile.photos[0].value);
+//     User.findOneAndUpdate({ googleId: profile.id }, {
+//       $set: {
+//         googleId: profile.id,
+//         name: profile.name,
+//         userName: profile.displayName,
+//         email: profile.emails[0].value,
+//         picture: profile.photos[0].value,
+//         accessToken
+//       }
+//     },
+//     { upsert: true, new: true, setDefaultsOnInsert: true })
+//     .then((user) => {
+//       console.log(user);
+//       cb(null, user);
+//     })
+//     .catch((err) => {
+//       console.log('catch error', err);
+//     });
+//   })
+// );
 
-app.get('/auth/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] }));
+// app.get('/auth/google',
+//   passport.authenticate('google', { scope: ['profile', 'email'] }));
 
-app.get('/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/', session: false }),
-  (req, res) => {
-    res.cookie('accessToken', req.user.accessToken, { expires: 0, httpOnly: false });
-    // Successful authentication, redirect home.
-    res.redirect('/');
-  });
+// app.get('/auth/google/callback',
+//   passport.authenticate('google', { failureRedirect: '/', session: false }),
+//   (req, res) => {
+//     res.cookie('accessToken', req.user.accessToken, { expires: 0, httpOnly: false });
+//     // Successful authentication, redirect home.
+//     res.redirect('/');
+//   });
 
 // passport bearer Strategy
-passport.use(new BearerStrategy(
-  (accessToken, done) => {
-    User.findOne({
-      accessToken
-    }).then((user) => {
-      done(null, user, { scope: 'read' });
-    }).catch((err) => {
-      done(err, null);
-    });
-  }
-));
+// passport.use(new BearerStrategy(
+//   (accessToken, done) => {
+//     User.findOne({
+//       accessToken
+//     }).then((user) => {
+//       done(null, user, { scope: 'read' });
+//     }).catch((err) => {
+//       done(err, null);
+//     });
+//   }
+// ));
 
 // get users homepage with authenticated route
 // app.get('/', passport.authenticate('bearer', { session: false }),
