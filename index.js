@@ -2,11 +2,11 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 // const { DATABASE_URL, PORT, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = require('./config');
-const GoogleStrategy = require('passport-google-oauth20');
-const passport = require('passport');
-const BearerStrategy = require('passport-http-bearer');
+// const GoogleStrategy = require('passport-google-oauth20');
+// const passport = require('passport');
+// const BearerStrategy = require('passport-http-bearer');
 
-const User = require('./models/user');
+// const User = require('./models/user');
 const Photos = require('./models/photos');
 const Members = require('./models/members');
 
@@ -151,15 +151,15 @@ let server;
 
 function runServer(callback) {
   return new Promise((resolve, reject) => {
-    mongoose.connect(DATABASE_URL, (err) => {
+    mongoose.connect(process.env.DATABASE_URL, (err) => {
       if (err && callback) {
         console.log(err);
         return callback(err);
       }
       return null;
     });
-    server = app.listen(PORT, HOST, () => {
-      console.log(`Your app is listening on port ${PORT}`);
+    server = app.listen(process.env.PORT, HOST, () => {
+      console.log(`Your app is listening on port ${process.env.PORT}`);
       if (callback) {
         callback();
       }
