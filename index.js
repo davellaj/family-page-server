@@ -1,13 +1,16 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const dotenv = require('dotenv');
+
+dotenv.config();
 // const { DATABASE_URL, PORT, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = require('./config');
 // const GoogleStrategy = require('passport-google-oauth20');
 // const passport = require('passport');
 // const BearerStrategy = require('passport-http-bearer');
 
 // const User = require('./models/user');
-const Photos = require('./models/photos');
+const Messages = require('./models/messages');
 const Members = require('./models/members');
 
 const HOST = process.env.HOST;
@@ -91,40 +94,40 @@ app.get('/', (req, res) => {
   res.status(200).json({ message: 'Hello from the server.' });
 });
 
-// ===== PHOTOS =====
+// ===== MESSAGES =====
 
-app.get('/photos', (req, res) => {
-  Photos.find()
-  .then((photos) => {
-    res.status(200).json(photos);
+app.get('/messages', (req, res) => {
+  Messages.find()
+  .then((messages) => {
+    res.status(200).json(messages);
   });
 });
 
-app.post('/photos', ({ body }, res) => {
+app.post('/messages', ({ body }, res) => {
   console.log(body);
 
-  Photos.create(body)
+  Messages.create(body)
   .then(({ _id }) => {
     res.status(201).json({ _id });
   });
 });
 
-app.delete('/photos/:photoId/:user', (req, res) => {
-  Photos.findOne(
-      { _id: req.params.photoId },
+app.delete('/messages/:messageId/:user', (req, res) => {
+  Messages.findOne(
+      { _id: req.params.messageId },
       (error) => {
         if (error) {
           console.error(error);
           res.sendStatus(404);
         }
       })
-      .then((photoToDelete) => {
-        if (!photoToDelete) {
+      .then((messageToDelete) => {
+        if (!messageToDelete) {
           res.sendStatus(404);
           return;
         }
-        if (req.params.user === photoToDelete.userId) {
-          photoToDelete.remove();
+        if (req.params.user === messageToDelete.userId) {
+          messageToDelete.remove();
           res.sendStatus(200);
         }
         res.sendStatus(403);

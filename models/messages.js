@@ -1,14 +1,14 @@
 const mongoose = require('mongoose');
 
-const photos = new mongoose.Schema({
+const messages = new mongoose.Schema({
+  contentType: { type: String, required: true },
   url: { type: String, required: true },
-  caption: String,
+  text: String,
   date: { type: Date, default: Date.now },
-  // TODO: convert userId to OID
   userId: { type: String, required: true },
   tags: Array,
 });
 
-const Photos = mongoose.model('photos', photos);
+const Messages = mongoose.model('photos', messages);
 
-module.exports = Photos;
+module.exports = Messages;
