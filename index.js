@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 
 dotenv.config();
+
+mongoose.Promise = global.Promise;
 // const { DATABASE_URL, PORT, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = require('./config');
 // const GoogleStrategy = require('passport-google-oauth20');
 // const passport = require('passport');
@@ -146,6 +148,25 @@ app.get('/members', (req, res) => {
 app.post('/members', ({ body }, res) => {
   Members.create(body)
   .then(data => res.status(200).json(data));
+});
+
+// ===== COMMENTS =====
+
+app.post('/comments/:userId/:messageId', (req, res) => {
+  console.log('here');
+  const testMessage = {
+    from: 'Casey',
+    to: 'Alex',
+    text: 'I solved it on the first try.'
+  };
+  Messages.findById(req.params.messageId)
+  .then((message) => {
+    message.comments.push(testMessage);
+    message.save();
+    return message;
+  })
+  .then(message => message.save())
+  .then(data => res.json(data).sendStatus(200));
 });
 
 // ===== SERVER =====
