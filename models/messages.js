@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const messages = new mongoose.Schema({
   contentType: { type: String, required: true },
-  url: { type: String, required: true },
+  url: { type: String },
   text: String,
   date: { type: Date, default: Date.now },
   userId: { type: String, required: true },
