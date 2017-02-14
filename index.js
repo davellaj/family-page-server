@@ -6,6 +6,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 mongoose.Promise = global.Promise;
+
 // const { DATABASE_URL, PORT, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = require('./config');
 // const GoogleStrategy = require('passport-google-oauth20');
 // const passport = require('passport');

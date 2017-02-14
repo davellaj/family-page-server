@@ -1,13 +1,5 @@
 const mongoose = require('mongoose');
 
-// const comments = new mongoose.Schema({
-//   from: { type: String, required: true },
-//   to: { type: String, required: true },
-//   text: { type: String, required: true },
-//   date: { type: Date, default: Date.now }
-// });
-
-
 const messages = new mongoose.Schema({
   contentType: { type: String, required: true },
   url: { type: String, required: true },
@@ -23,7 +15,6 @@ const messages = new mongoose.Schema({
   }]
 });
 
-// const Comments = mongoose.model('comments', comments);
 const Messages = mongoose.model('photos', messages);
 
 module.exports = Messages;
