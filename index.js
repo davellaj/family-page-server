@@ -46,26 +46,25 @@ app.post('/messages', ({ body }, res) => {
 });
 
 app.delete('/messages/:messageId/:user', (req, res) => {
-  Messages.findOne(
-      { _id: req.params.messageId },
-      (error) => {
-        if (error) {
-          console.error(error);
-          res.sendStatus(404);
-        }
-      })
-      .then((messageToDelete) => {
-        if (!messageToDelete) {
-          res.sendStatus(404);
-          return;
-        }
-        if (req.params.user === messageToDelete.userId) {
-          messageToDelete.remove();
-          res.sendStatus(200);
-        }
-        res.sendStatus(403);
-      })
-      .catch(console.error);
+  Messages.findById(req.params.messageId,
+    (error) => {
+      if (error) {
+        console.error(error);
+        res.sendStatus(404);
+      }
+    })
+    .then((messageToDelete) => {
+      if (!messageToDelete) {
+        res.sendStatus(404);
+        return;
+      }
+      if (req.params.user === messageToDelete.userId) {
+        messageToDelete.remove();
+        res.sendStatus(200);
+      }
+      res.sendStatus(403);
+    })
+    .catch(console.error);
 });
 
 // ===== MEMBERS =====
@@ -84,21 +83,46 @@ app.post('/members', ({ body }, res) => {
 // ===== COMMENTS =====
 
 app.post('/comments/:userId/:messageId', (req, res) => {
-  console.log('here');
-  const testMessage = {
-    from: 'Casey',
-    to: 'Alex',
-    text: 'I solved it on the first try.'
-  };
-  Messages.findById(req.params.messageId)
-  .then((message) => {
-    message.comments.push(testMessage);
-    message.save();
-    return message;
+  console.log('post comments endpoint hit');
+
+  Messages.update(
+    { _id: req.params.messageId },
+    { $push: { comments: req.body } }
+  )
+
+  .then((data) => {
+    console.log(data);
+    if (data.nModified > 0) {
+      res.sendStatus(200);
+    } else {
+      res.sendStatus(404);
+    }
   })
-  .then(message => message.save())
-  .then(data => res.json(data).sendStatus(200));
+
+  .catch(console.error);
 });
+
+app.delete('/comments/:userId/:messageId/:commentId',
+  ({ params: { userId, messageId, commentId } }, res) => {
+    console.log(`DELETE /comments/${userId}/:${messageId}/:${commentId}`);
+
+    Messages.update(
+      { _id: messageId },
+      { $pull: { comments: { _id: commentId } } }
+    )
+
+    .then((status) => {
+      console.log(status);
+      if (status.nModified > 0) {
+        res.sendStatus(202);
+      } else {
+        res.sendStatus(404);
+      }
+    })
+
+    .catch(console.error);
+  }
+);
 
 // ===== SERVER =====
 
