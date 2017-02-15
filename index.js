@@ -13,9 +13,9 @@ dotenv.config();
 mongoose.Promise = global.Promise;
 
 // Prepend timestamp to all `logs`
-console.log = console.log.bind(null, `${new Date().toISOString()}`);
+const log = (...args) => console.log(new Date().toISOString(), ...args);
 
-console.log(`Server running in ${process.env.NODE_ENV} mode`);
+log(`Server running in ${process.env.NODE_ENV} mode`);
 
 const app = express();
 app.use(bodyParser.json());
@@ -36,7 +36,7 @@ app.get('/', (req, res) => {
 // ===== MESSAGES =====
 
 app.get('/messages', (req, res) => {
-  console.log('GET /messages');
+  log('GET /messages');
 
   Messages.find()
   .then((messages) => {
@@ -45,7 +45,7 @@ app.get('/messages', (req, res) => {
 });
 
 app.post('/messages', ({ body }, res) => {
-  console.log(`POST /messages, body: ${body}`);
+  log(`POST /messages, body: ${body}`);
 
   Messages.create(body)
   .then(({ _id }) => {
@@ -55,7 +55,7 @@ app.post('/messages', ({ body }, res) => {
 
 app.delete('/messages/:messageId/:user',
   ({ params: { messageId, user } }, res) => {
-    console.log(`DELETE /messages/${messageId}/${user}`);
+    log(`DELETE /messages/${messageId}/${user}`);
 
     Messages.findById(messageId)
       .then((messageToDelete) => {
@@ -80,7 +80,7 @@ app.delete('/messages/:messageId/:user',
 
 app.get('/members',
   (req, res) => {
-    console.log('GET /members');
+    log('GET /members');
 
     Members.find()
 
@@ -96,7 +96,7 @@ app.get('/members',
 
 app.post('/members',
   ({ body }, res) => {
-    console.log(`POST /members, body: ${body}`);
+    log(`POST /members, body: ${body}`);
 
     Members.create(body)
 
@@ -115,7 +115,7 @@ app.post('/members',
 
 app.post('/comments/:userId/:messageId',
   ({ body, params: { userId, messageId } }, res) => {
-    console.log(`POST /comments/${userId}/:${messageId}`);
+    log(`POST /comments/${userId}/:${messageId}`);
 
     Messages.update(
       { _id: messageId },
@@ -123,7 +123,7 @@ app.post('/comments/:userId/:messageId',
     )
 
     .then((data) => {
-      console.log(data);
+      log(data);
       if (data.nModified > 0) {
         res.sendStatus(200);
       } else {
@@ -140,7 +140,7 @@ app.post('/comments/:userId/:messageId',
 
 app.delete('/comments/:userId/:messageId/:commentId',
   ({ params: { userId, messageId, commentId } }, res) => {
-    console.log(`DELETE /comments/${userId}/:${messageId}/:${commentId}`);
+    log(`DELETE /comments/${userId}/:${messageId}/:${commentId}`);
 
     Messages.update(
       { _id: messageId },
@@ -148,7 +148,7 @@ app.delete('/comments/:userId/:messageId/:commentId',
     )
 
     .then((status) => {
-      console.log(status);
+      log(status);
       if (status.nModified > 0) {
         res.sendStatus(202);
       } else {
@@ -165,7 +165,7 @@ app.delete('/comments/:userId/:messageId/:commentId',
 
 app.delete('/comments/:userId/:messageId/:commentId',
   ({ params: { userId, messageId, commentId } }, res) => {
-    console.log(`DELETE /comments/${userId}/:${messageId}/:${commentId}`);
+    log(`DELETE /comments/${userId}/:${messageId}/:${commentId}`);
 
     Messages.update(
       { _id: messageId },
@@ -173,7 +173,7 @@ app.delete('/comments/:userId/:messageId/:commentId',
     )
 
     .then((status) => {
-      console.log(status);
+      log(status);
       if (status.nModified > 0) {
         res.sendStatus(202);
       } else {
@@ -193,13 +193,13 @@ function runServer(callback) {
   return new Promise((resolve, reject) => {
     mongoose.connect(process.env.DATABASE_URL, (err) => {
       if (err && callback) {
-        console.log(err);
+        log(err);
         return callback(err);
       }
       return null;
     });
     server = app.listen(process.env.PORT, HOST, () => {
-      console.log(`Your app is listening on port ${process.env.PORT}`);
+      log(`Your app is listening on port ${process.env.PORT}`);
       if (callback) {
         callback();
       }
@@ -212,7 +212,7 @@ function runServer(callback) {
 
 function closeServer() {
   return new Promise((resolve, reject) => {
-    console.log('Closing server');
+    log('Closing server');
     server.close((err) => {
       if (err) {
         reject(err);
