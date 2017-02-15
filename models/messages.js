@@ -1,7 +1,13 @@
 const mongoose = require('mongoose');
 
+mongoose.Promise = global.Promise;
+
 const messages = new mongoose.Schema({
-  contentType: { type: String, required: true },
+  contentType: {
+    type: String,
+    required: true,
+    enum: ['photo', 'announcement'],
+  },
   url: { type: String },
   text: String,
   date: { type: Date, default: Date.now },
@@ -11,8 +17,9 @@ const messages = new mongoose.Schema({
     from: { type: String, required: true },
     to: { type: String, required: true },
     text: { type: String, required: true },
-    date: { type: Date, default: Date.now }
-  }]
+    date: { type: Date, default: Date.now },
+  }],
+
 });
 
 const Messages = mongoose.model('photos', messages);
