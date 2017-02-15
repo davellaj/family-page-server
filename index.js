@@ -163,28 +163,6 @@ app.delete('/comments/:userId/:messageId/:commentId',
   }
 );
 
-app.delete('/comments/:userId/:messageId/:commentId',
-  ({ params: { userId, messageId, commentId } }, res) => {
-    log(`DELETE /comments/${userId}/:${messageId}/:${commentId}`);
-
-    Messages.update(
-      { _id: messageId },
-      { $pull: { comments: { _id: commentId } } }
-    )
-
-    .then((status) => {
-      log(status);
-      if (status.nModified > 0) {
-        res.sendStatus(202);
-      } else {
-        res.sendStatus(404);
-      }
-    })
-
-    .catch(console.error);
-  }
-);
-
 // ===== SERVER =====
 
 let server;
