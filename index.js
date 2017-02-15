@@ -163,6 +163,25 @@ app.delete('/comments/:userId/:messageId/:commentId',
   }
 );
 
+// ===== COMMENTS =====
+
+app.post('/comments/:userId/:messageId', (req, res) => {
+  console.log('here');
+  const testMessage = {
+    from: 'Casey',
+    to: 'Alex',
+    text: 'I solved it on the first try.'
+  };
+  Messages.findById(req.params.messageId)
+  .then((message) => {
+    message.comments.push(testMessage);
+    message.save();
+    return message;
+  })
+  .then(message => message.save())
+  .then(data => res.json(data).sendStatus(200));
+});
+
 // ===== SERVER =====
 
 let server;

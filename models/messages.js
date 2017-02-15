@@ -19,6 +19,7 @@ const messages = new mongoose.Schema({
     text: { type: String, required: true },
     date: { type: Date, default: Date.now },
   }],
+
 });
 
 const Messages = mongoose.model('photos', messages);
