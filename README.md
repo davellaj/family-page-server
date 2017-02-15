@@ -24,56 +24,14 @@
 ```
 
 #### `DELETE /messages/:messageId/:user`
+- remove specified messageId
+- TODO reverse order for consistency
 
-### Message Sample Object
-```json
-{
-  "_id": "589b9c6705ae9f0d9cbd165d",
-  "url": "http://lorempixel.com/900/400/nightlife",
-  "text": "Grandma playing beach volleyball",
-  "userId": "Alex",
-  "contentType": ["photo", "announcement"],
-  "tags": [
-    "Ben",
-    "Alex"
-  ],
-  "date": "2017-02-08T22:32:07.298Z",
-  "comments": [
-    {
-      "from": "Jamie",
-      "to": "Ben",
-      "comment": "my nephew is getting tall",
-      "posted": "Date.now()"
-    },
-    {
-      "from": "Ben",
-      "to": "Jamie",
-      "comment": "wow he is big for his age!",
-      "posted": "Date.now"
-    },
-    {
-      "from": "Jamie",
-      "to": "Lauryn",
-      "comment": "what size does Jaxson wear?",
-      "posted": "Date.now"
-    },
-    {
-      "from": "Lauryn",
-      "to": "Jamie",
-      "comment": "1year old clothes?",
-      "posted": "Date.now"
-    },
-  ]
-}
+#### `GET /members`
+- array of family member objects, including currently logged in member
 
-
-```
-
-#### `/members`
-- `GET`
-  - array of family member objects, including currently logged in member
-- `POST`
-  - message body containing new family member info
+#### `POST  /members`
+- message body containing new family member info
 
 ### Members Sample Object
 ```json
@@ -99,3 +57,45 @@
 
 #### `DELETE /comments/:userId/:messageId/:commentId`
 - delete designated comment from designated message
+
+### Message Sample Object
+```json
+{
+  "_id": "589b9c6705ae9f0d9cbd165d",
+  "url": "http://lorempixel.com/900/400/nightlife",
+  "text": "Grandma playing beach volleyball",
+  "userId": "Alex",
+  "contentType": ["photo", "announcement"],
+  "tags": [
+    "Ben",
+    "Alex"
+  ],
+  "date": "2017-02-08T22:32:07.298Z",
+  "comments": [
+    {
+      "from": "Jamie",
+      "to": "Ben",
+      "text": "my nephew is getting tall",
+      "posted": "Date.now()"
+    },
+    {
+      "from": "Ben",
+      "to": "Jamie",
+      "text": "wow he is big for his age!",
+      "posted": "Date.now"
+    },
+    {
+      "from": "Jamie",
+      "to": "Lauryn",
+      "text": "what size does Jaxson wear?",
+      "posted": "Date.now"
+    },
+    {
+      "from": "Lauryn",
+      "to": "Jamie",
+      "text": "1 year old clothes?",
+      "posted": "Date.now"
+    },
+  ]
+}
+```
