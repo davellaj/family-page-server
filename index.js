@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
+const passport = require('passport');
+const BearerStrategy = require('passport-http-bearer').Strategy;
 
 const Messages = require('./models/messages');
 const Members = require('./models/members');
@@ -29,9 +31,28 @@ app.all('/*', (req, res, next) => {
   next();
 });
 
+passport.use(new BearerStrategy(
+    (accessToken, done) => {
+      console.log('token', accessToken);
+      if (accessToken === 'token 123') {
+        return done(null, { message: 'correct! you\'re in' }, { scope: 'read' });
+      }
+      return done(null, { message: 'incorrect token' });
+    }
+));
+
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'Hello from the server.' });
 });
+
+// ===== AUTH =====
+
+app.get('/helloworld', passport.authenticate('bearer', { session: false }),
+  (req, res) => {
+    res.json(req.user.message);
+  }
+);
+
 
 // ===== MESSAGES =====
 
