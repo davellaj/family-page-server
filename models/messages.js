@@ -21,6 +21,6 @@ const messages = new mongoose.Schema({
   }],
 });
 
-const Messages = mongoose.model('photos', messages);
+const Messages = mongoose.model('messages', messages);
 
 module.exports = Messages;
