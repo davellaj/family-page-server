@@ -10,7 +10,8 @@ const userSchema = new Schema({
   accessToken: String,
   userName: { type: String, required: true },
   email: Object,
-  picture: String
+  picture: String,
+  families: [mongoose.ObjectId]
 });
 
 const User = mongoose.model('user', userSchema);

@@ -5,6 +5,11 @@
     ],
     "rules": {
       "no-console": 0,
-      "comma-dangle": 0
+      "comma-dangle": 0,
+      "no-underscore-dangle": [ "error", {
+        "allow": [
+          "_id"
+        ]
+      } ]
     }
 }

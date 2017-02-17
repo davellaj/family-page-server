@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 
+mongoose.Promise = global.Promise;
+
 const members = new mongoose.Schema({
-  email: { type: String, required: true },
   fullname: { type: String, required: true },
   nickname: { type: String, required: true },
   avatar: String,

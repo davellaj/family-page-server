@@ -47,27 +47,22 @@ app.get('/', (req, res) => {
 
 // ===== AUTH =====
 
-app.get('/helloworld', passport.authenticate('bearer', { session: false }),
-  (req, res) => {
-    res.json(req.user);
-  }
-);
-
 passport.use(new GoogleStrategy({
   clientID: process.env.CLIENTID,
   clientSecret: process.env.CLIENTSECRET,
   callbackURL: 'http://localhost:8080/auth/google/callback'
 }, (accessToken, refreshToken, profile, done) => {
   log('=======', accessToken);
+  log('----->', profile);
 
   User.findOneAndUpdate({ googleId: profile.id },
     {
       $set: {
         googleId: profile.id,
-        name: profile.name,
-        // userName: profile.displayName,
-        // email: profile.emails[0].value,
-        // picture: profile.photos[0].value,
+        name: profile.name || '',
+        userName: profile.displayName || '',
+        email: profile.emails[0].value || '',
+        picture: profile.photos[0].value || '',
         accessToken
       }
     },
@@ -81,7 +76,13 @@ passport.use(new GoogleStrategy({
     });
 }));
 
-app.get('/auth/google', passport.authenticate('google', { scope: ['profile'] }));
+app.get('/helloworld', passport.authenticate('bearer', { session: false }),
+(req, res) => {
+  res.json(req.user);
+}
+);
+
+app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
 app.get('/auth/google/callback',
     passport.authenticate('google', { failureRedirect: 'http://localhost:3000/login', session: false }),
@@ -99,41 +100,47 @@ app.get('/auth/logout', (req, res) => {
 // ===== MESSAGES =====
 
 // ===== TODO remove after updating frontend =====
-app.get('/messages/', (req, res) => {
-  log('GET /messages');
-
-  Messages.find()
-  .then(messages => res.json(messages))
-  .catch(console.error);
-});
+// app.get('/messages/', (req, res) => {
+//   log('GET /messages');
+//
+//   Messages.find()
+//   .then(messages => res.json(messages))
+//   .catch(console.error);
+// });
 // ===============================================
 
 // UserId to be replaced by oauth code
-app.get('/messages/:userId', ({ params: { userId } }, res) => {
-  log(`GET /messages/${userId}`);
+app.get('/messages',
+  passport.authenticate('bearer', { session: false }),
+  ({ user, params: { userId } }, res) => {
+    log(`GET /messages/${userId}`);
+    log('Extra info from passport:', user);
 
-  Messages.find()
+    Messages.find()
   .then((messages) => {
     res.json(
       messages.map(message =>
         Object.assign(message, {
           comments: message.comments.filter(comment =>
-            comment.from === userId || comment.to === userId || userId === 'Admin'
+            comment.from === user._id || comment.to === user._id
           )
         }
       ))
     );
   });
-});
-
-app.post('/messages', ({ body }, res) => {
-  log(`POST /messages, body: ${body}`);
-
-  Messages.create(body)
-  .then(({ _id }) => {
-    res.status(201).json({ _id });
   });
-});
+
+app.post('/messages',
+  passport.authenticate('bearer', { session: false }),
+  ({ user, body }, res) => {
+    log(`POST /messages, body: ${body}`);
+    log('Extra info from passport:', user);
+
+    Messages.create(Object.assign(body, { userId: user._id }))
+    .then(({ _id }) => {
+      res.status(201).json({ _id });
+    });
+  });
 
 app.delete('/messages/:messageId/:user',
   ({ params: { messageId, user } }, res) => {
@@ -160,7 +167,7 @@ app.delete('/messages/:messageId/:user',
 
 // ===== MEMBERS =====
 
-app.get('/members',
+app.get('/members', passport.authenticate('bearer', { session: false }),
   (req, res) => {
     log('GET /members');
 
