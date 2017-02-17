@@ -35,7 +35,7 @@ app.all('/*', (req, res, next) => {
 
 passport.use(new BearerStrategy(
     (accessToken, done) => {
-      log('token', accessToken);
+      console.log('token', accessToken);
       User.findOne({ accessToken })
       .then(user => done(null, user, { scope: 'read' }));
     }
