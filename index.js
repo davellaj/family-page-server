@@ -2,9 +2,13 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
+const passport = require('passport');
+const BearerStrategy = require('passport-http-bearer').Strategy;
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 const Messages = require('./models/messages');
 const Members = require('./models/members');
+const User = require('./models/user');
 
 const HOST = process.env.HOST;
 
@@ -29,9 +33,73 @@ app.all('/*', (req, res, next) => {
   next();
 });
 
+passport.use(new BearerStrategy(
+    (accessToken, done) => {
+      console.log('token', accessToken);
+      User.findOne({ accessToken })
+      .then(user => done(null, user, { scope: 'read' }));
+    }
+));
+
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'Hello from the server.' });
 });
+
+// ===== AUTH =====
+
+app.get('/helloworld', passport.authenticate('bearer', { session: false }),
+  (req, res) => {
+    res.json(req.user);
+  }
+);
+
+//= ======
+
+passport.use(new GoogleStrategy({
+  clientID: process.env.CLIENTID,
+  clientSecret: process.env.CLIENTSECRET,
+  callbackURL: 'http://localhost:8080/auth/google/callback'
+}, (accessToken, refreshToken, profile, done) => {
+  console.log('=======', accessToken);
+    // Add real find or create here
+
+  User.findOneAndUpdate({ googleId: profile.id },
+    {
+      $set: {
+        googleId: profile.id,
+        name: profile.name,
+        // userName: profile.displayName,
+        // email: profile.emails[0].value,
+        // picture: profile.photos[0].value,
+        accessToken
+      }
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true })
+    .then((user) => {
+      console.log('user', user);
+      done(null, user);
+    })
+    .catch((err) => {
+      console.log('catch error', err);
+    });
+}));
+
+app.get('/auth/google', passport.authenticate('google', { scope: ['profile'] }));
+
+app.get('/auth/google/callback',
+    passport.authenticate('google', { failureRedirect: 'http://localhost:3000/login', session: false }),
+    (req, res) => {
+      console.log('req.user', req.user);
+      res.cookie('accessToken', req.user.accessToken, { expires: 0 });
+      res.redirect('http://localhost:3000/');
+    });
+
+app.get('/auth/logout', (req, res) => {
+  req.logout();
+  res.redirect('http://localhost:3000/');
+});
+
+//= =====
 
 // ===== MESSAGES =====
 
