@@ -27,31 +27,23 @@ app.use(bodyParser.json());
 app.all('/*', (req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers',
-    'Content-Type, Access-Control-Allow-Headers, ' +
-    'Authorization, X-Requested-With'
+    'Content-Type, '
+    + 'Access-Control-Allow-Headers, '
+    + 'Authorization, '
+    + 'X-Requested-With'
   );
   next();
 });
 
+// ===== AUTH =====
+
 passport.use(new BearerStrategy(
     (accessToken, done) => {
-      console.log('token', accessToken);
+      log('token', accessToken);
       User.findOne({ accessToken })
       .then(user => done(null, user, { scope: 'read' }));
     }
 ));
-
-app.get('/', (req, res) => {
-  res.status(200).json({ message: 'Hello from the server.' });
-});
-
-// ===== AUTH =====
-
-app.get('/helloworld', passport.authenticate('bearer', { session: false }),
-  (req, res) => {
-    res.json(req.user);
-  }
-);
 
 passport.use(new GoogleStrategy({
   clientID: process.env.CLIENTID,
@@ -64,10 +56,10 @@ passport.use(new GoogleStrategy({
     {
       $set: {
         googleId: profile.id,
-        name: profile.name,
-        // userName: profile.displayName,
-        // email: profile.emails[0].value,
-        // picture: profile.photos[0].value,
+        name: profile.name || '',
+        userName: profile.displayName || '',
+        email: profile.emails[0].value || '',
+        avatar: profile.photos[0].value || '',
         accessToken
       }
     },
@@ -81,15 +73,16 @@ passport.use(new GoogleStrategy({
     });
 }));
 
-app.get('/auth/google', passport.authenticate('google', { scope: ['profile'] }));
+app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
 app.get('/auth/google/callback',
-    passport.authenticate('google', { failureRedirect: 'http://localhost:3000/login', session: false }),
-    (req, res) => {
-      console.log('req.user', req.user);
-      res.cookie('accessToken', req.user.accessToken, { expires: 0 });
-      res.redirect('http://localhost:3000/');
-    });
+  passport.authenticate('google', { failureRedirect: 'http://localhost:3000/login', session: false }),
+  ({ user }, res) => {
+    log('req.user', user);
+    res.cookie('accessToken', user.accessToken, { expires: 0 });
+    res.redirect('http://localhost:3000/');
+  }
+);
 
 app.get('/auth/logout', (req, res) => {
   req.logout();
@@ -98,46 +91,42 @@ app.get('/auth/logout', (req, res) => {
 
 // ===== MESSAGES =====
 
-// ===== TODO remove after updating frontend =====
-app.get('/messages/', (req, res) => {
-  log('GET /messages');
+app.get('/messages',
+  passport.authenticate('bearer', { session: false }),
+  ({ user }, res) => {
+    log('GET /messages/');
 
-  Messages.find()
-  .then(messages => res.json(messages))
-  .catch(console.error);
-});
-// ===============================================
+    Messages.find()
+    .then((messages) => {
+      res.json(
+        messages.map(message =>
+          Object.assign(message, {
+            comments: message.comments.filter(comment =>
+              comment.from === user._id || comment.to === user._id
+            )
+          })
+        )
+      );
+    });
+  }
+);
 
-// UserId to be replaced by oauth code
-app.get('/messages/:userId', ({ params: { userId } }, res) => {
-  log(`GET /messages/${userId}`);
+app.post('/messages',
+  passport.authenticate('bearer', { session: false }),
+  ({ user, body }, res) => {
+    log(`POST /messages, body: ${body}`);
 
-  Messages.find()
-  .then((messages) => {
-    res.json(
-      messages.map(message =>
-        Object.assign(message, {
-          comments: message.comments.filter(comment =>
-            comment.from === userId || comment.to === userId || userId === 'Admin'
-          )
-        }
-      ))
-    );
-  });
-});
+    Messages.create(Object.assign(body, { userId: user._id }))
+    .then(({ _id }) => {
+      res.status(201).json({ _id });
+    });
+  }
+);
 
-app.post('/messages', ({ body }, res) => {
-  log(`POST /messages, body: ${body}`);
-
-  Messages.create(body)
-  .then(({ _id }) => {
-    res.status(201).json({ _id });
-  });
-});
-
-app.delete('/messages/:messageId/:user',
+// TODO
+app.delete('/messages/:messageId',
   ({ params: { messageId, user } }, res) => {
-    log(`DELETE /messages/${messageId}/${user}`);
+    log(`DELETE /messages/${messageId}`);
 
     Messages.findById(messageId)
       .then((messageToDelete) => {
@@ -160,14 +149,13 @@ app.delete('/messages/:messageId/:user',
 
 // ===== MEMBERS =====
 
-app.get('/members',
+app.get('/members', passport.authenticate('bearer', { session: false }),
   (req, res) => {
     log('GET /members');
 
-    Members.find()
+    User.find()
 
-    .then(members =>
-      res.status(200).json(members))
+    .then(res.json)
 
     .catch((err) => {
       console.error(err);
@@ -176,15 +164,15 @@ app.get('/members',
   }
 );
 
-app.post('/members',
+// This endpoint is moot until Family layer is introduced
+// Until then, the Google Auth routes are effectively adding users
+app.post('/members', passport.authenticate('bearer', { session: false }),
   ({ body }, res) => {
     log(`POST /members, body: ${body}`);
 
     Members.create(body)
 
-    .then(data =>
-      res.status(200).json(data)
-    )
+    .then(res.json)
 
     .catch((err) => {
       console.error(err);
