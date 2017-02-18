@@ -165,23 +165,6 @@ app.get('/members', passport.authenticate('bearer', { session: false }),
   }
 );
 
-// This endpoint is moot until Family layer is introduced
-// Until then, the Google Auth routes are effectively adding users
-app.post('/members', passport.authenticate('bearer', { session: false }),
-  ({ body }, res) => {
-    log(`POST /members, body: ${body}`);
-
-    Members.create(body)
-
-    .then(res.json)
-
-    .catch((err) => {
-      console.error(err);
-      res.sendStatus(404);
-    });
-  }
-);
-
 // ===== COMMENTS =====
 
 app.post('/comments', passport.authenticate('bearer', { session: false }),
