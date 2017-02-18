@@ -76,11 +76,11 @@ passport.use(new GoogleStrategy({
 app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
 app.get('/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: 'http://localhost:3000/login', session: false }),
+  passport.authenticate('google', { failureRedirect: 'http://localhost:3000/', session: false }),
   ({ user }, res) => {
     log('req.user', user);
     res.cookie('accessToken', user.accessToken, { expires: 0 });
-    res.redirect('http://localhost:3000/');
+    res.redirect('http://localhost:3000/#/app');
   }
 );
 
