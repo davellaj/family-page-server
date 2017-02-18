@@ -7,7 +7,6 @@ const BearerStrategy = require('passport-http-bearer').Strategy;
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 const Messages = require('./models/messages');
-const Members = require('./models/members');
 const User = require('./models/user');
 
 const HOST = process.env.HOST;
@@ -99,7 +98,10 @@ app.get('/messages',
     Messages.find()
     .then((messages) => {
       log(messages[0]);
-      res.json({ currentUser: user._id,
+      res.json({
+        currentUser: user._id,
+        currentAvatar: user.nickname,
+        currentNickname: user.avatar,
         messages: messages.map(message =>
           Object.assign(message, {
             comments: message.comments.filter(comment =>
@@ -124,9 +126,8 @@ app.post('/messages',
   }
 );
 
-// TODO
-app.delete('/messages/:messageId',
-  ({ params: { messageId, user } }, res) => {
+app.delete('/messages/:messageId', passport.authenticate('bearer', { session: false }),
+  ({ user, params: { messageId } }, res) => {
     log(`DELETE /messages/${messageId}`);
 
     Messages.findById(messageId)
@@ -135,15 +136,16 @@ app.delete('/messages/:messageId',
           res.sendStatus(404);
           return;
         }
-        if (user === messageToDelete.userId) {
+        if (user._id.equals(messageToDelete.userId)) {
           messageToDelete.remove();
           res.sendStatus(200);
+        } else {
+          res.sendStatus(401);
         }
-        res.sendStatus(403);
       })
       .catch((err) => {
         console.error(err);
-        res.sendStatus(404);
+        res.sendStatus(400);
       });
   }
 );
@@ -195,6 +197,7 @@ app.post('/comments', passport.authenticate('bearer', { session: false }),
   }
 );
 
+// TODO authenticate
 app.delete('/comments/:userId/:messageId/:commentId',
   ({ params: { userId, messageId, commentId } }, res) => {
     log(`DELETE /comments/${userId}/:${messageId}/:${commentId}`);
