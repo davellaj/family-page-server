@@ -103,7 +103,7 @@ app.get('/messages',
         messages: messages.map(message =>
           Object.assign(message, {
             comments: message.comments.filter(comment =>
-              comment.from.toString() === user._id.toString() || comment.to.toString() === user._id.toString()
+              user._id.equals(comment.from) || user._id.equals(comment.to)
             )
           })
         )
@@ -188,9 +188,6 @@ app.post('/comments', passport.authenticate('bearer', { session: false }),
   ({ body, user }, res) => {
     log(`POST /comments/:${body.messageId}`);
 
-    log('user', user);
-    log('body:', body);
-
     Messages.update(
       { _id: body.messageId },
       { $push: { comments: {
@@ -201,7 +198,6 @@ app.post('/comments', passport.authenticate('bearer', { session: false }),
     )
 
     .then((data) => {
-      log(data);
       if (data.nModified > 0) {
         res.sendStatus(200);
       } else {
@@ -226,7 +222,6 @@ app.delete('/comments/:userId/:messageId/:commentId',
     )
 
     .then((status) => {
-      log(status);
       if (status.nModified > 0) {
         res.sendStatus(202);
       } else {
