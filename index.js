@@ -56,7 +56,7 @@ passport.use(new GoogleStrategy({
     {
       $set: {
         googleId: profile.id,
-        name: profile.name || '',
+        nickname: profile.name.givenName || '',
         userName: profile.displayName || '',
         email: profile.emails[0].value || '',
         avatar: profile.photos[0].value || '',
@@ -98,15 +98,16 @@ app.get('/messages',
 
     Messages.find()
     .then((messages) => {
-      res.json(
-        messages.map(message =>
+      log(messages[0]);
+      res.json({ currentUser: user._id,
+        messages: messages.map(message =>
           Object.assign(message, {
             comments: message.comments.filter(comment =>
               comment.from === user._id || comment.to === user._id
             )
           })
         )
-      );
+      });
     });
   }
 );
@@ -155,7 +156,7 @@ app.get('/members', passport.authenticate('bearer', { session: false }),
 
     User.find()
 
-    .then(res.json)
+    .then(data => res.json(data))
 
     .catch((err) => {
       console.error(err);
@@ -183,13 +184,20 @@ app.post('/members', passport.authenticate('bearer', { session: false }),
 
 // ===== COMMENTS =====
 
-app.post('/comments/:userId/:messageId',
-  ({ body, params: { userId, messageId } }, res) => {
-    log(`POST /comments/${userId}/:${messageId}`);
+app.post('/comments', passport.authenticate('bearer', { session: false }),
+  ({ body, user }, res) => {
+    log(`POST /comments/:${body.messageId}`);
+
+    log('user', user);
+    log('body:', body);
 
     Messages.update(
-      { _id: messageId },
-      { $push: { comments: body } }
+      { _id: body.messageId },
+      { $push: { comments: {
+        from: user._id,
+        to: body.to,
+        text: body.text,
+      } } }
     )
 
     .then((data) => {
