@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 
 mongoose.Promise = global.Promise;
 
+const Schema = mongoose.Schema;
+
 const messages = new mongoose.Schema({
   contentType: {
     type: String,
@@ -11,11 +13,11 @@ const messages = new mongoose.Schema({
   url: { type: String },
   text: String,
   date: { type: Date, default: Date.now },
-  userId: { type: String, required: true },
+  userId: { type: Schema.Types.ObjectId, required: true },
   tags: Array,
   comments: [{
-    from: { type: String, required: true },
-    to: { type: String, required: true },
+    from: { type: Schema.Types.ObjectId, required: true },
+    to: { type: Schema.Types.ObjectId, required: true },
     text: { type: String, required: true },
     date: { type: Date, default: Date.now },
   }],
