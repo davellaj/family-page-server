@@ -103,7 +103,7 @@ app.get('/messages',
         messages: messages.map(message =>
           Object.assign(message, {
             comments: message.comments.filter(comment =>
-              comment.from === user._id || comment.to === user._id
+              comment.from.toString() === user._id.toString() || comment.to.toString() === user._id.toString()
             )
           })
         )
