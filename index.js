@@ -100,8 +100,8 @@ app.get('/messages',
       log(messages[0]);
       res.json({
         currentUser: user._id,
-        currentAvatar: user.nickname,
-        currentNickname: user.avatar,
+        currentAvatar: user.avatar,
+        currentNickname: user.nickname,
         messages: messages.map(message =>
           Object.assign(message, {
             comments: message.comments.filter(comment =>
