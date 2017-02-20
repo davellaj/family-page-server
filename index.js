@@ -97,7 +97,6 @@ app.get('/messages',
 
     Messages.find()
     .then((messages) => {
-      log(messages[0]);
       res.json({
         currentUser: user._id,
         currentAvatar: user.avatar,
@@ -197,27 +196,41 @@ app.post('/comments', passport.authenticate('bearer', { session: false }),
   }
 );
 
-// TODO authenticate
-app.delete('/comments/:userId/:messageId/:commentId',
-  ({ params: { userId, messageId, commentId } }, res) => {
-    log(`DELETE /comments/${userId}/:${messageId}/:${commentId}`);
+app.delete('/comments/:messageId/:commentId', passport.authenticate('bearer', { session: false }),
+  ({ user, params: { messageId, commentId } }, res) => {
+    log(`DELETE /comments/:${messageId}/:${commentId}`);
 
-    Messages.update(
-      { _id: messageId },
-      { $pull: { comments: { _id: commentId } } }
+    Messages.findById(
+      messageId,
+      { comments: { $elemMatch: { _id: commentId, from: user._id } } }
     )
+    .then((data) => {
+      if (data.comments.length < 1) {
+        const err = new Error();
+        err.message = `${user._id} tried to delete comment ${commentId} off of messsage ${messageId}`;
+        throw err;
+      }
 
+      return Messages.update(
+        { _id: messageId },
+        { $pull: { comments: { _id: commentId } } }
+      );
+    })
     .then((status) => {
       if (status.nModified > 0) {
         res.sendStatus(202);
       } else {
-        res.sendStatus(404);
+        const err = new Error();
+        err.message = 'not found';
+        throw err;
       }
     })
-
     .catch((err) => {
-      console.error(err);
-      res.sendStatus(404);
+      console.error(err.message);
+      if (err.kind === 'ObjectId') {
+        return res.sendStatus(400);
+      }
+      return res.sendStatus(401);
     });
   }
 );
