@@ -38,9 +38,12 @@ app.all('/*', (req, res, next) => {
 
 passport.use(new BearerStrategy(
     (accessToken, done) => {
-      log('token', accessToken);
+      // log(`token: ${accessToken}`);
       User.findOne({ accessToken })
-      .then(user => done(null, user, { scope: 'read' }));
+      .then((user) => {
+        log(`userId: ${user._id}`);
+        done(null, user, { scope: 'read' });
+      });
     }
 ));
 
@@ -72,12 +75,17 @@ passport.use(new GoogleStrategy({
     });
 }));
 
-app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+app.get('/auth/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] })
+);
 
 app.get('/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: 'http://localhost:3000/', session: false }),
+  passport.authenticate('google',
+    { failureRedirect: 'http://localhost:3000/', session: false }
+  ),
+
   ({ user }, res) => {
-    log('req.user', user);
+    log(`Authenticated user: ${user}`);
     res.cookie('accessToken', user.accessToken, { expires: 0 });
     res.redirect('http://localhost:3000/#/app');
   }
@@ -92,59 +100,65 @@ app.get('/auth/logout', (req, res) => {
 
 app.get('/messages',
   passport.authenticate('bearer', { session: false }),
+
   ({ user }, res) => {
     log('GET /messages/');
 
-    Messages.find()
-    .then((messages) => {
+    Messages.find().sort({ date: -1 })
+    .then(messages =>
       res.json({
         currentUser: user._id,
         currentAvatar: user.avatar,
         currentNickname: user.nickname,
         messages: messages.map(message =>
           Object.assign(message, {
-            comments: message.comments.filter(comment =>
-              user._id.equals(comment.from) || user._id.equals(comment.to)
-            )
+            comments: message.comments
+              .filter(comment =>
+                user._id.equals(comment.from) || user._id.equals(comment.to)
+              )
+              .sort((x, y) => new Date(x.date) - new Date(y.date))
           })
-        )
-      });
-    });
+        ),
+      })
+    );
   }
 );
 
 app.post('/messages',
   passport.authenticate('bearer', { session: false }),
+
   ({ user, body }, res) => {
     log(`POST /messages, body: ${body}`);
 
     Messages.create(Object.assign(body, { userId: user._id }))
     .then(({ _id }) => {
       res.status(201).json({ _id });
+    })
+    .catch((err) => {
+      log(`Err: ${err}`);
+      res.sendStatus(404);
     });
   }
 );
 
-app.delete('/messages/:messageId', passport.authenticate('bearer', { session: false }),
+app.delete('/messages/:messageId',
+  passport.authenticate('bearer', { session: false }),
+
   ({ user, params: { messageId } }, res) => {
     log(`DELETE /messages/${messageId}`);
 
-    Messages.findById(messageId)
-      .then((messageToDelete) => {
-        if (!messageToDelete) {
-          res.sendStatus(404);
-          return;
-        }
-        if (user._id.equals(messageToDelete.userId)) {
-          messageToDelete.remove();
+    Messages.findOne({ _id: messageId, userId: user._id })
+      .then((result) => {
+        if (result) {
+          result.remove();
           res.sendStatus(200);
         } else {
-          res.sendStatus(401);
+          res.sendStatus(404);
         }
       })
       .catch((err) => {
         console.error(err);
-        res.sendStatus(400);
+        res.sendStatus(404);
       });
   }
 );
@@ -155,7 +169,8 @@ app.get('/members', passport.authenticate('bearer', { session: false }),
   (req, res) => {
     log('GET /members');
 
-    User.find()
+    // When multiple families implemented, limit find to current family
+    User.find({}, { accessToken: 0, __v: 0, googleId: 0 })
 
     .then(data => res.json(data))
 
@@ -196,41 +211,25 @@ app.post('/comments', passport.authenticate('bearer', { session: false }),
   }
 );
 
-app.delete('/comments/:messageId/:commentId', passport.authenticate('bearer', { session: false }),
+app.delete('/comments/:messageId/:commentId',
+  passport.authenticate('bearer', { session: false }),
   ({ user, params: { messageId, commentId } }, res) => {
     log(`DELETE /comments/:${messageId}/:${commentId}`);
 
-    Messages.findById(
-      messageId,
-      { comments: { $elemMatch: { _id: commentId, from: user._id } } }
+    Messages.update(
+      { _id: messageId },
+      { $pull: { comments: { _id: commentId, from: user._id } } }
     )
-    .then((data) => {
-      if (data.comments.length < 1) {
-        const err = new Error();
-        err.message = `${user._id} tried to delete comment ${commentId} off of messsage ${messageId}`;
-        throw err;
-      }
-
-      return Messages.update(
-        { _id: messageId },
-        { $pull: { comments: { _id: commentId } } }
-      );
-    })
     .then((status) => {
       if (status.nModified > 0) {
         res.sendStatus(202);
       } else {
-        const err = new Error();
-        err.message = 'not found';
-        throw err;
+        res.sendStatus(404);
       }
     })
     .catch((err) => {
       console.error(err.message);
-      if (err.kind === 'ObjectId') {
-        return res.sendStatus(400);
-      }
-      return res.sendStatus(401);
+      return res.sendStatus(404);
     });
   }
 );
