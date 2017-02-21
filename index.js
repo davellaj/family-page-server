@@ -87,7 +87,7 @@ app.get('/auth/google/callback',
 
   ({ user }, res) => {
     log(`Authenticated user: ${user}`);
-    res.cookie('accessToken', user.accessToken, { expires: 0 });
+    res.cookie('accessToken', user.accessToken, { expires: 0, httpOnly: false });
     res.redirect(`${frontendUrl}/#/app`);
   }
 );
