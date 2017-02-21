@@ -95,7 +95,7 @@ app.get('/auth/google/callback',
     });
     // res.redirect(`${frontendUrl}/#/app`);
     res.redirect('/#/app');
-    res.render();
+    res.send('testing123');
   }
 );
 
