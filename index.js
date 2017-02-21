@@ -172,13 +172,28 @@ app.get('/members', passport.authenticate('bearer', { session: false }),
     // When multiple families implemented, limit find to current family
     User.find({}, { accessToken: 0, __v: 0, googleId: 0 })
 
-    .then(data => res.json(data))
+    .then(users => res.json(users))
 
     .catch((err) => {
       console.error(err);
       res.sendStatus(400);
     });
   }
+);
+
+// ===== CURRENT USER =====
+// limited functionality now; to be used for multiple families functionality
+
+app.get('/user', passport.authenticate('bearer', { session: false }),
+  ({ user }, res) =>
+    res.json({
+      currentUser: {
+        id: user._id,
+        avatar: user.avatar,
+        nickname: user.nickname,
+        fullname: user.userName,
+      }
+    })
 );
 
 // ===== COMMENTS =====
