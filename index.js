@@ -93,9 +93,7 @@ app.get('/auth/google/callback',
       httpOnly: false,
       domain: frontendUrl
     });
-    // res.redirect(`${frontendUrl}/#/app`);
-    res.redirect('/#/app');
-    res.send('testing123');
+    res.redirect(`${frontendUrl}/#/app`);
   }
 );
 
