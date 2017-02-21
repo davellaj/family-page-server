@@ -13,6 +13,7 @@ const HOST = process.env.HOST;
 
 dotenv.config();
 const frontendUrl = process.env.FRONTEND_URL;
+console.log('frontendUrl env:', frontendUrl);
 
 mongoose.Promise = global.Promise;
 
