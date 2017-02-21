@@ -12,6 +12,7 @@ const User = require('./models/user');
 const HOST = process.env.HOST;
 
 dotenv.config();
+const frontendUrl = process.env.FRONTEND_URL;
 
 mongoose.Promise = global.Promise;
 
@@ -50,7 +51,7 @@ passport.use(new BearerStrategy(
 passport.use(new GoogleStrategy({
   clientID: process.env.CLIENTID,
   clientSecret: process.env.CLIENTSECRET,
-  callbackURL: 'http://localhost:8080/auth/google/callback'
+  callbackURL: `${process.env.BACKEND_URL}/auth/google/callback`
 }, (accessToken, refreshToken, profile, done) => {
   log('=======', accessToken);
 
@@ -81,19 +82,19 @@ app.get('/auth/google',
 
 app.get('/auth/google/callback',
   passport.authenticate('google',
-    { failureRedirect: 'http://localhost:3000/', session: false }
+    { failureRedirect: frontendUrl, session: false }
   ),
 
   ({ user }, res) => {
     log(`Authenticated user: ${user}`);
     res.cookie('accessToken', user.accessToken, { expires: 0 });
-    res.redirect('http://localhost:3000/#/app');
+    res.redirect(`${frontendUrl}/#/app`);
   }
 );
 
 app.get('/auth/logout', (req, res) => {
   req.logout();
-  res.redirect('http://localhost:3000/');
+  res.redirect(frontendUrl);
 });
 
 // ===== MESSAGES =====
