@@ -10,11 +10,9 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const Messages = require('./models/messages');
 const User = require('./models/user');
 
-const HOST = process.env.HOST;
-
 dotenv.config();
+
 const frontendUrl = process.env.FRONTEND_URL;
-console.log('frontendUrl env:', frontendUrl);
 
 mongoose.Promise = global.Promise;
 
@@ -25,20 +23,25 @@ log(`Server running in ${process.env.NODE_ENV} mode`);
 
 const app = express();
 app.use(cors());
-
 app.use(bodyParser.json());
 
 // ===== AUTH =====
 
 passport.use(new BearerStrategy(
-    (accessToken, done) => {
-      // log(`token: ${accessToken}`);
-      User.findOne({ accessToken })
-      .then((user) => {
-        log(`userId: ${user._id}`);
-        done(null, user, { scope: 'read' });
-      });
+  (accessToken, done) => {
+    if (!accessToken) {
+      throw new Error({ message: 'Invalid or missing accessToken' });
     }
+    User.findOne({ accessToken })
+    .then((user) => {
+      log(`userId: ${user._id}`);
+      done(null, user, { scope: 'read' });
+    })
+    .catch((err) => {
+      log(`Passport bearer error: ${err}`);
+      done(err, null);
+    });
+  }
 ));
 
 passport.use(new GoogleStrategy({
@@ -46,27 +49,28 @@ passport.use(new GoogleStrategy({
   clientSecret: process.env.CLIENTSECRET,
   callbackURL: `${process.env.BACKEND_URL}/auth/google/callback`
 }, (accessToken, refreshToken, profile, done) => {
-  log('=======', accessToken);
-
-  User.findOneAndUpdate({ googleId: profile.id },
-    {
-      $set: {
-        googleId: profile.id,
-        nickname: profile.name.givenName || '',
-        userName: profile.displayName || '',
-        email: profile.emails[0].value || '',
-        avatar: profile.photos[0].value || '',
-        accessToken
-      }
-    },
-    { upsert: true, new: true, setDefaultsOnInsert: true })
-    .then((user) => {
-      log('user', user);
-      done(null, user);
-    })
-    .catch((err) => {
-      log(err);
-    });
+  log(`accessToken: ${accessToken}`);
+  User.findOneAndUpdate({
+    googleId: profile.id
+  }, {
+    $set: {
+      googleId: profile.id,
+      nickname: profile.name.givenName || '',
+      userName: profile.displayName || '',
+      email: profile.emails[0].value || '',
+      avatar: profile.photos[0].value || '',
+      accessToken
+    }
+  }, {
+    upsert: true, new: true, setDefaultsOnInsert: true
+  })
+  .then((user) => {
+    log(`userId: ${user._id}`);
+    done(null, user);
+  })
+  .catch((err) => {
+    log(err);
+  });
 }));
 
 app.get('/auth/google',
@@ -76,15 +80,8 @@ app.get('/auth/google',
 app.get('/auth/google/callback',
   passport.authenticate('google',
     { failureRedirect: frontendUrl, session: false }
-  ),
-
-  ({ user }, res) => {
-    log(`Authenticated user: ${user}`);
-    // res.cookie('accessToken', user.accessToken, {
-    //   expires: 0,
-    //   httpOnly: false,
-    //   // domain: frontendUrl
-    // });
+  ), ({ user }, res) => {
+    log(`userId: ${user._id}`);
     res.redirect(`${frontendUrl}/#/app?token=${user.accessToken}`);
   }
 );
@@ -124,7 +121,6 @@ app.get('/messages',
 
 app.post('/messages',
   passport.authenticate('bearer', { session: false }),
-
   ({ user, body }, res) => {
     log(`POST /messages, body: ${body}`);
 
@@ -260,7 +256,7 @@ function runServer(callback) {
       }
       return null;
     });
-    server = app.listen(process.env.PORT, HOST, () => {
+    server = app.listen(process.env.PORT, process.env.HOST, () => {
       log(`Your app is listening on port ${process.env.PORT}`);
       if (callback) {
         callback();
