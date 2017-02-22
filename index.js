@@ -91,7 +91,7 @@ app.get('/auth/google/callback',
     res.cookie('accessToken', user.accessToken, {
       expires: 0,
       httpOnly: false,
-      domain: frontendUrl
+      // domain: frontendUrl
     });
     res.redirect(`${frontendUrl}/#/app`);
   }
