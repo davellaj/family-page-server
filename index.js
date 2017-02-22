@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const passport = require('passport');
+const cors = require('cors');
 const BearerStrategy = require('passport-http-bearer').Strategy;
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
@@ -23,18 +24,9 @@ const log = (...args) => console.log(new Date().toISOString(), ...args);
 log(`Server running in ${process.env.NODE_ENV} mode`);
 
 const app = express();
-app.use(bodyParser.json());
+app.use(cors());
 
-app.all('/*', (req, res, next) => {
-  res.header('Access-Control-Allow-Origin', frontendUrl);
-  res.header('Access-Control-Allow-Headers',
-    'Content-Type, '
-    + 'Access-Control-Allow-Headers, '
-    + 'Authorization, '
-    + 'X-Requested-With'
-  );
-  next();
-});
+app.use(bodyParser.json());
 
 // ===== AUTH =====
 
