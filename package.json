@@ -4,7 +4,7 @@
   "description": "Backend for capstone project",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "DATABASE_URL=http://localhost:27017 && node ./tests/test",
     "start": "node index"
   },
   "repository": {
