@@ -102,9 +102,6 @@ app.get('/messages',
     Messages.find().sort({ date: -1 })
     .then(messages =>
       res.json({
-        currentUser: user._id,
-        currentAvatar: user.avatar,
-        currentNickname: user.nickname,
         messages: messages.map(message =>
           Object.assign(message, {
             comments: message.comments
