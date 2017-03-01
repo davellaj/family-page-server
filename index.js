@@ -93,13 +93,13 @@ app.get('/auth/logout', (req, res) => {
 
 // ===== MESSAGES =====
 
-app.get('/messages',
+app.get('/:family/messages',
   passport.authenticate('bearer', { session: false }),
 
-  ({ user }, res) => {
+  ({ user, params }, res) => {
     log('GET /messages/');
-
-    Messages.find().sort({ date: -1 })
+    // check whether family param is in User's family list (authed for this family?)
+    Messages.find({ family: params.family }).sort({ date: -1 })
     .then(messages =>
       res.json({
         messages: messages.map(message =>
