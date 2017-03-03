@@ -177,6 +177,7 @@ app.get('/members', passport.authenticate('bearer', { session: false }),
 );
 
 // ===== FAMILIES =====
+
 app.post('/family', passport.authenticate('bearer', { session: false }),
   ({ user, body }, res) => {
     Family.create(body)
@@ -185,14 +186,12 @@ app.post('/family', passport.authenticate('bearer', { session: false }),
 );
 
 // ===== CURRENT USER =====
-// limited functionality now; to be used for multiple families functionality
-
-// families: [oids...]
 
 app.get('/user', passport.authenticate('bearer', { session: false }),
   ({ user }, res) => {
     Family.find()
     .populate('members', 'nickname userName email')
+    .populate('admins', 'nickname userName email')
     .then((data) => {
       log('family data:??', data);
       return data;

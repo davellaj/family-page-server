@@ -7,7 +7,7 @@ const Schema = mongoose.Schema;
 const familySchema = new Schema({
   name: { type: String, required: true },
   created: { type: Date, default: Date.now },
-  admins: [Schema.Types.ObjectId],
+  admins: [{ type: Schema.Types.ObjectId, ref: 'user' }],
   members: [{ type: Schema.Types.ObjectId, ref: 'user' }],
   avatar: String,
 });
