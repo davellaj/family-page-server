@@ -9,6 +9,7 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 const Messages = require('./models/messages');
 const User = require('./models/user');
+const Family = require('./models/family');
 
 dotenv.config();
 
@@ -93,12 +94,15 @@ app.get('/auth/logout', (req, res) => {
 
 // ===== MESSAGES =====
 
+// app.get('/:family/messages',
 app.get('/messages',
   passport.authenticate('bearer', { session: false }),
 
+  // ({ user, params }, res) => {
   ({ user }, res) => {
     log('GET /messages/');
-
+    // check whether family param is in User's family list (authed for this family?)
+    // Messages.find({ family: params.family }).sort({ date: -1 })
     Messages.find().sort({ date: -1 })
     .then(messages =>
       res.json({
@@ -172,20 +176,43 @@ app.get('/members', passport.authenticate('bearer', { session: false }),
   }
 );
 
+// ===== FAMILIES =====
+
+app.post('/family', passport.authenticate('bearer', { session: false }),
+  ({ user, body }, res) => {
+    Family.create(body)
+    .then(({ _id }) => res.json(_id));
+  }
+);
+
 // ===== CURRENT USER =====
-// limited functionality now; to be used for multiple families functionality
 
 app.get('/user', passport.authenticate('bearer', { session: false }),
-  ({ user }, res) =>
-    res.json({
-      currentUser: {
-        id: user._id,
-        avatar: user.avatar,
-        nickname: user.nickname,
-        fullname: user.userName,
-      }
+  ({ user }, res) => {
+    Family.find()
+    .populate('members', 'nickname userName email')
+    .populate('admins', 'nickname userName email')
+    .then((data) => {
+      log('family data:??', data);
+      return data;
     })
-);
+    .then(allFamilies => allFamilies.filter(({ members }) =>
+        members.some(member => member.equals(user._id))
+      )
+    )
+    .then(families =>
+      res.json({
+        currentUser: {
+          id: user._id,
+          avatar: user.avatar,
+          nickname: user.nickname,
+          fullname: user.userName,
+          families
+        }
+      })
+    )
+    .catch(console.error);
+  });
 
 // ===== COMMENTS =====
 

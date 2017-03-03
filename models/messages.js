@@ -5,6 +5,7 @@ mongoose.Promise = global.Promise;
 const Schema = mongoose.Schema;
 
 const messages = new mongoose.Schema({
+  family: { type: Schema.Types.ObjectId, required: true },
   contentType: {
     type: String,
     required: true,

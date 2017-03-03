@@ -11,7 +11,6 @@ const userSchema = new Schema({
   userName: String,
   email: Object,
   avatar: String,
-  families: [Schema.Types.ObjectId]
 });
 
 const User = mongoose.model('user', userSchema);
