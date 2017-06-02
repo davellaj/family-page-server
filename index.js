@@ -95,15 +95,42 @@ app.get('/auth/logout', (req, res) => {
 // ===== MESSAGES =====
 
 // app.get('/:family/messages',
-app.get('/messages',
+// app.get('/messages',
+//   passport.authenticate('bearer', { session: false }),
+//
+//   // ({ user, params }, res) => {
+//   ({ user }, res) => {
+//     log(`GET /messages/${user}`);
+//     // check whether family param is in User's family list (authed for this family?)
+//     // Messages.find({ family: params.family }).sort({ date: -1 })
+//     Messages.find().sort({ date: -1 })
+//     .then(messages =>
+//       res.json({
+//         messages: messages.map(message =>
+//           Object.assign(message, {
+//             comments: message.comments
+//               .filter(comment =>
+//                 user._id.equals(comment.from) || user._id.equals(comment.to)
+//               )
+//               .sort((x, y) => new Date(x.date) - new Date(y.date))
+//           })
+//         ),
+//       })
+//     );
+//   }
+// );
+// filter by family before sending back messages
+// app.get('/:family/messages',
+app.get('/messages/:family',
   passport.authenticate('bearer', { session: false }),
 
-  // ({ user, params }, res) => {
-  ({ user }, res) => {
-    log('GET /messages/');
+  ({ user, params }, res) => {
+    log(`GET /messages/${user},${params.family}`);
     // check whether family param is in User's family list (authed for this family?)
     // Messages.find({ family: params.family }).sort({ date: -1 })
-    Messages.find().sort({ date: -1 })
+    Messages.find({
+      family: params.family
+    }).sort({ date: -1 })
     .then(messages =>
       res.json({
         messages: messages.map(message =>
@@ -190,8 +217,8 @@ app.post('/family', passport.authenticate('bearer', { session: false }),
 app.get('/user', passport.authenticate('bearer', { session: false }),
   ({ user }, res) => {
     Family.find()
-    .populate('members', 'nickname userName email')
-    .populate('admins', 'nickname userName email')
+    .populate('members', 'nickname userName email avatar')
+    .populate('admins', 'nickname userName email avatar')
     .then((data) => {
       log('family data:??', data);
       return data;
