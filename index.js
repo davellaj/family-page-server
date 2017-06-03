@@ -66,7 +66,6 @@ passport.use(new GoogleStrategy({
     upsert: true, new: true, setDefaultsOnInsert: true
   })
   .then((user) => {
-    log(`userId: ${user._id}`);
     done(null, user);
   })
   .catch((err) => {
@@ -82,7 +81,6 @@ app.get('/auth/google/callback',
   passport.authenticate('google',
     { failureRedirect: frontendUrl, session: false }
   ), ({ user }, res) => {
-    log(`userId: ${user._id}`);
     res.redirect(`${frontendUrl}/#/app?token=${user.accessToken}`);
   }
 );
@@ -120,17 +118,15 @@ app.get('/auth/logout', (req, res) => {
 //   }
 // );
 // filter by family before sending back messages
-// app.get('/:family/messages',
 app.get('/messages/:family',
   passport.authenticate('bearer', { session: false }),
 
   ({ user, params }, res) => {
-    log(`GET /messages/${user},${params.family}`);
+    log(`GET /messages/${user}, ${params.family}`);
     // check whether family param is in User's family list (authed for this family?)
-    // Messages.find({ family: params.family }).sort({ date: -1 })
-    Messages.find({
-      family: params.family
-    }).sort({ date: -1 })
+    // add error handling: if :family exists
+    Messages.find({ family: params.family })
+    .sort({ date: -1 })
     .then(messages =>
       res.json({
         messages: messages.map(message =>
@@ -143,14 +139,18 @@ app.get('/messages/:family',
           })
         ),
       })
-    );
+    )
+    .catch((err) => {
+      log(`Err: ${err}`);
+      res.sendStatus(404);
+    });
   }
 );
 
 app.post('/messages',
   passport.authenticate('bearer', { session: false }),
   ({ user, body }, res) => {
-    log(`POST /messages, body: ${body}`);
+    log(`POST /messages, body: ${body} and user ${user}`);
 
     Messages.create(Object.assign(body, { userId: user._id }))
     .then(({ _id }) => {
@@ -185,23 +185,22 @@ app.delete('/messages/:messageId',
   }
 );
 
-// ===== MEMBERS =====
-
-app.get('/members', passport.authenticate('bearer', { session: false }),
-  (req, res) => {
-    log('GET /members');
-
-    // When multiple families implemented, limit find to current family
-    User.find({}, { accessToken: 0, __v: 0, googleId: 0 })
-
-    .then(users => res.json(users))
-
-    .catch((err) => {
-      console.error(err);
-      res.sendStatus(400);
-    });
-  }
-);
+// ===== MEMBERS ===== no longer needed can remove this code
+// app.get('/members', passport.authenticate('bearer', { session: false }),
+//   (req, res) => {
+//     log('GET /members');
+//
+//     // When multiple families implemented, limit find to current family
+//     User.find({}, { accessToken: 0, __v: 0, googleId: 0 })
+//
+//     .then(users => res.json(users))
+//
+//     .catch((err) => {
+//       console.error(err);
+//       res.sendStatus(400);
+//     });
+//   }
+// );
 
 // ===== FAMILIES =====
 
@@ -219,10 +218,9 @@ app.get('/user', passport.authenticate('bearer', { session: false }),
     Family.find()
     .populate('members', 'nickname userName email avatar')
     .populate('admins', 'nickname userName email avatar')
-    .then((data) => {
-      log('family data:??', data);
-      return data;
-    })
+    .then(data =>
+      // log('family data:??', data);
+       data)
     .then(allFamilies => allFamilies.filter(({ members }) =>
         members.some(member => member.equals(user._id))
       )
