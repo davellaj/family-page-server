@@ -90,39 +90,10 @@ app.get('/auth/logout', (req, res) => {
   res.redirect(frontendUrl);
 });
 
-// ===== MESSAGES =====
-
-// app.get('/:family/messages',
-// app.get('/messages',
-//   passport.authenticate('bearer', { session: false }),
-//
-//   // ({ user, params }, res) => {
-//   ({ user }, res) => {
-//     log(`GET /messages/${user}`);
-//     // check whether family param is in User's family list (authed for this family?)
-//     // Messages.find({ family: params.family }).sort({ date: -1 })
-//     Messages.find().sort({ date: -1 })
-//     .then(messages =>
-//       res.json({
-//         messages: messages.map(message =>
-//           Object.assign(message, {
-//             comments: message.comments
-//               .filter(comment =>
-//                 user._id.equals(comment.from) || user._id.equals(comment.to)
-//               )
-//               .sort((x, y) => new Date(x.date) - new Date(y.date))
-//           })
-//         ),
-//       })
-//     );
-//   }
-// );
-// filter by family before sending back messages
 app.get('/messages/:family',
   passport.authenticate('bearer', { session: false }),
 
   ({ user, params }, res) => {
-    log(`GET /messages/${user}, ${params.family}`);
     // check whether family param is in User's family list (authed for this family?)
     // add error handling: if :family exists
     Messages.find({ family: params.family })
@@ -150,14 +121,36 @@ app.get('/messages/:family',
 app.post('/messages',
   passport.authenticate('bearer', { session: false }),
   ({ user, body }, res) => {
-    log(`POST /messages, body: ${body} and user ${user}`);
+  // log(`POST /messages, body: ${body} and user ${user}`);
+  // Security / Error checking - to make sure user in family before creating DB post
+    // do not know how to send response if the user isn't in the family. It currently
+    // just does not allow for a database post if it doesnt find the logged in user in
+    // the family no indication on server logs or frontend, I would like to implement this
 
-    Messages.create(Object.assign(body, { userId: user._id }))
-    .then(({ _id }) => {
-      res.status(201).json({ _id });
+    Family.findOne({ _id: body.family })
+    .populate('members', '_id')
+    .then((data) => {
+      const usrStr = user._id.toISOString;
+
+      for (let i = 0; i < data.members.length; i++) {
+        const familyMember = data.members[i]._id.toISOString;
+
+        if (usrStr === familyMember) {
+          // If authorized user is in family, create a new message
+          Messages.create(Object.assign(body, { userId: user._id }))
+          .then(({ _id }) => {
+            res.status(201).json({ _id });
+          })
+          .catch((err) => {
+            log(`Could not create Message, Err: ${err}`);
+            res.sendStatus(404);
+          });
+          break;
+        }
+      }
     })
     .catch((err) => {
-      log(`Err: ${err}`);
+      log(`Could not find family, Err: ${err}`);
       res.sendStatus(404);
     });
   }
@@ -184,23 +177,6 @@ app.delete('/messages/:messageId',
       });
   }
 );
-
-// ===== MEMBERS ===== no longer needed can remove this code
-// app.get('/members', passport.authenticate('bearer', { session: false }),
-//   (req, res) => {
-//     log('GET /members');
-//
-//     // When multiple families implemented, limit find to current family
-//     User.find({}, { accessToken: 0, __v: 0, googleId: 0 })
-//
-//     .then(users => res.json(users))
-//
-//     .catch((err) => {
-//       console.error(err);
-//       res.sendStatus(400);
-//     });
-//   }
-// );
 
 // ===== FAMILIES =====
 
