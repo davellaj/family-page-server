@@ -125,15 +125,18 @@ app.post('/messages',
   // Security / Error checking - to make sure user in family before creating DB post
     // do not know how to send response if the user isn't in the family. It currently
     // just does not allow for a database post if it doesnt find the logged in user in
-    // the family no indication on server logs or frontend, I would like to implement this
+    // TODO the family no indication on server logs or frontend, I would like to implement this
 
     Family.findOne({ _id: body.family })
-    .populate('members', '_id')
+    .populate('members', 'id')
     .then((data) => {
-      const usrStr = user._id.toISOString;
+      const usrStr = user.id;
+      console.log(typeof usrStr);
+      console.log(data.members.includes(user.id));
 
       for (let i = 0; i < data.members.length; i++) {
-        const familyMember = data.members[i]._id.toISOString;
+        const familyMember = data.members[i].id;
+        console.log(typeof familyMember);
 
         if (usrStr === familyMember) {
           // If authorized user is in family, create a new message
