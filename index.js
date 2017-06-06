@@ -185,7 +185,7 @@ app.delete('/messages/:messageId',
 
 app.post('/family', passport.authenticate('bearer', { session: false }),
   ({ user, body }, res) => {
-    Family.create(body)
+    Family.create(Object.assign(body, { admins: [user._id], members: [user._id] }))
     .then(({ _id }) => res.json(_id));
   }
 );
