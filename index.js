@@ -127,16 +127,13 @@ app.post('/messages',
     // just does not allow for a database post if it doesnt find the logged in user in
     // TODO the family no indication on server logs or frontend, I would like to implement this
 
-    Family.findOne({ _id: body.family })
+    Family.findById(body.family)
     .populate('members', 'id')
     .then((data) => {
       const usrStr = user.id;
-      console.log(typeof usrStr);
-      console.log(data.members.includes(user.id));
 
       for (let i = 0; i < data.members.length; i++) {
         const familyMember = data.members[i].id;
-        console.log(typeof familyMember);
 
         if (usrStr === familyMember) {
           // If authorized user is in family, create a new message
@@ -186,7 +183,11 @@ app.delete('/messages/:messageId',
 app.post('/family', passport.authenticate('bearer', { session: false }),
   ({ user, body }, res) => {
     Family.create(Object.assign(body, { admins: [user._id], members: [user._id] }))
-    .then(({ _id }) => res.json(_id));
+    .then(newFamily => res.json(newFamily))
+    .catch((err) => {
+      log(`Could not create Family, Err: ${err}`);
+      res.sendStatus(404);
+    });
   }
 );
 
@@ -195,10 +196,10 @@ app.post('/family', passport.authenticate('bearer', { session: false }),
 app.get('/user', passport.authenticate('bearer', { session: false }),
   ({ user }, res) => {
     Family.find()
-    .populate('members', 'nickname userName email avatar')
-    .populate('admins', 'nickname userName email avatar')
+    .populate('members', 'nickname')
+    .populate('admins', 'nickname')
     .then(data =>
-      // log('family data:??', data);
+      // log('family data:', data);
        data)
     .then(allFamilies => allFamilies.filter(({ members }) =>
         members.some(member => member.equals(user._id))
@@ -215,7 +216,10 @@ app.get('/user', passport.authenticate('bearer', { session: false }),
         }
       })
     )
-    .catch(console.error);
+    .catch((err) => {
+      console.error(err);
+      res.sendStatus(404);
+    });
   });
 
 // ===== COMMENTS =====
@@ -267,6 +271,23 @@ app.delete('/comments/:messageId/:commentId',
     .catch((err) => {
       console.error(err.message);
       return res.sendStatus(404);
+    });
+  }
+);
+
+// ===== MEMBERS =====
+
+app.get('/members/:family',
+ passport.authenticate('bearer', { session: false }),
+  ({ user, params }, res) => {
+    Family.findById(params.family)
+    .populate('members', 'nickname avatar')
+    .then((family) => {
+      res.json(family.members);
+    })
+    .catch((err) => {
+      console.error(err);
+      res.sendStatus(400);
     });
   }
 );
