@@ -82,7 +82,6 @@ app.get('/auth/google/callback',
     { failureRedirect: frontendUrl, session: false }
   ), ({ user }, res) => {
     res.redirect(`${frontendUrl}/#/families?token=${user.accessToken}`);
-    // res.redirect(`${frontendUrl}/#/app?token=${user.accessToken}`);
   }
 );
 
