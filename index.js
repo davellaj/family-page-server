@@ -81,7 +81,8 @@ app.get('/auth/google/callback',
   passport.authenticate('google',
     { failureRedirect: frontendUrl, session: false }
   ), ({ user }, res) => {
-    res.redirect(`${frontendUrl}/#/app?token=${user.accessToken}`);
+    res.redirect(`${frontendUrl}/#/families?token=${user.accessToken}`);
+    // res.redirect(`${frontendUrl}/#/app?token=${user.accessToken}`);
   }
 );
 
@@ -280,9 +281,11 @@ app.delete('/comments/:messageId/:commentId',
 app.get('/members/:family',
  passport.authenticate('bearer', { session: false }),
   ({ user, params }, res) => {
+    // console.log(params);
     Family.findById(params.family)
     .populate('members', 'nickname avatar')
     .then((family) => {
+      // console.log(family);
       res.json(family.members);
     })
     .catch((err) => {
