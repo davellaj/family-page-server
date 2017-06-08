@@ -108,7 +108,7 @@ app.get('/messages/:family',
               )
               .sort((x, y) => new Date(x.date) - new Date(y.date))
           })
-        ),
+        )
       })
     )
     .catch((err) => {
@@ -121,7 +121,6 @@ app.get('/messages/:family',
 app.post('/messages',
   passport.authenticate('bearer', { session: false }),
   ({ user, body }, res) => {
-  // log(`POST /messages, body: ${body} and user ${user}`);
   // Security / Error checking - to make sure user in family before creating DB post
     // do not know how to send response if the user isn't in the family. It currently
     // just does not allow for a database post if it doesnt find the logged in user in
@@ -133,12 +132,13 @@ app.post('/messages',
       const usrStr = user.id;
 
       for (let i = 0; i < data.members.length; i++) {
-        const familyMember = data.members[i].id;
+        let familyMember = data.members[i].id; // eslint-disable-line
 
         if (usrStr === familyMember) {
           // If authorized user is in family, create a new message
           Messages.create(Object.assign(body, { userId: user._id }))
           .then(({ _id }) => {
+            console.log({ _id });
             res.status(201).json({ _id });
           })
           .catch((err) => {
@@ -236,7 +236,6 @@ app.post('/comments', passport.authenticate('bearer', { session: false }),
         text: body.text,
       } } }
     )
-
     .then((data) => {
       if (data.nModified > 0) {
         res.sendStatus(200);
@@ -244,7 +243,6 @@ app.post('/comments', passport.authenticate('bearer', { session: false }),
         res.sendStatus(404);
       }
     })
-
     .catch((err) => {
       console.error(err);
       res.sendStatus(404);
